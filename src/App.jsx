@@ -10,13 +10,23 @@ function App() {
 
   const [formData, setFormData] = useState({
     customerName: "",
-    product: "",
-    gauge: "",
-    size: "",
-    quantity: "",
+    mobile: "",
+    address: "",
+    pincode: "",
+    state: "",
+    city: "",
+    country: "",
+    orderType: "",
+    acres: "",
+    units: "",
+    soilType: "",
+    productType: "",
+    material: "",
+    dimension: "",
+    deliveryDate: "",
+    amount: "",
   });
 
-  // ✅ Fetch Orders on Page Load
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -27,16 +37,14 @@ function App() {
       const data = await res.json();
       setOrders(data);
     } catch (err) {
-      console.error("Error fetching orders:", err);
+      console.error(err);
     }
   };
 
-  // ✅ Handle Input Change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Submit Order
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -44,146 +52,143 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/orders`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          status: "Order placed",
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Add order instantly to UI
         setOrders((prev) => [...prev, data]);
-
-        // Close modal
         setShowModal(false);
-
-        // Reset form
-        setFormData({
-          customerName: "",
-          product: "",
-          gauge: "",
-          size: "",
-          quantity: "",
-        });
-      } else {
-        alert("Failed to create order");
+        setFormData({});
       }
     } catch (error) {
-      console.error("Submit error:", error);
+      console.error(error);
     }
 
     setLoading(false);
   };
 
+  const totalRevenue = orders.reduce(
+    (sum, order) => sum + Number(order.amount || 0),
+    0
+  );
+
   return (
-    <div className="dashboard-bg">
-      <div className="overlay">
-        <h1 className="title">Factory ERP Dashboard</h1>
+    <div className="dashboard">
+      {/* Navbar */}
+      <div className="navbar">
+        <div className="logo">Factory Dashboard</div>
+        <div>
+          Admin | <span className="logout">Logout</span>
+        </div>
+      </div>
 
-        <button className="add-btn" onClick={() => setShowModal(true)}>
-          + Add Order
-        </button>
+      <div className="content">
+        <h2>Welcome back, Admin!</h2>
 
-        {/* Orders Table */}
-        <div className="table-container">
+        <div className="actions">
+          <button onClick={() => setShowModal(true)}>New Order</button>
+          <button>View All Orders</button>
+          <button>Customers</button>
+          <button>Reports</button>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="cards">
+          <div className="card">
+            <h3>{orders.length}</h3>
+            <p>Total Orders</p>
+          </div>
+
+          <div className="card">
+            <h3>₹{totalRevenue.toLocaleString()}</h3>
+            <p>Total Revenue</p>
+          </div>
+
+          <div className="card">
+            <h3>{orders.length}</h3>
+            <p>Total Customers</p>
+          </div>
+
+          <div className="card">
+            <h3>₹0</h3>
+            <p>Collected</p>
+          </div>
+        </div>
+
+        {/* Recent Orders */}
+        <div className="table-section">
+          <h3>Recent Orders</h3>
           <table>
             <thead>
               <tr>
                 <th>Customer</th>
                 <th>Product</th>
-                <th>Gauge</th>
-                <th>Size</th>
-                <th>Qty</th>
                 <th>Status</th>
+                <th>Amount</th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order, index) => (
                 <tr key={index}>
                   <td>{order.customerName}</td>
-                  <td>{order.product}</td>
-                  <td>{order.gauge}</td>
-                  <td>{order.size}</td>
-                  <td>{order.quantity}</td>
+                  <td>{order.productType}</td>
                   <td>{order.status}</td>
+                  <td>₹{order.amount || 0}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-
-        {/* Modal */}
-        {showModal && (
-          <div className="modal-overlay">
-            <div className="modal slide-up">
-              <h2>Add New Order</h2>
-
-              <form onSubmit={handleSubmit}>
-                <input
-                  type="text"
-                  name="customerName"
-                  placeholder="Customer Name"
-                  value={formData.customerName}
-                  onChange={handleChange}
-                  required
-                />
-
-                <input
-                  type="text"
-                  name="product"
-                  placeholder="Product"
-                  value={formData.product}
-                  onChange={handleChange}
-                  required
-                />
-
-                <input
-                  type="text"
-                  name="gauge"
-                  placeholder="Gauge"
-                  value={formData.gauge}
-                  onChange={handleChange}
-                  required
-                />
-
-                <input
-                  type="text"
-                  name="size"
-                  placeholder="Size"
-                  value={formData.size}
-                  onChange={handleChange}
-                  required
-                />
-
-                <input
-                  type="number"
-                  name="quantity"
-                  placeholder="Quantity"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                  required
-                />
-
-                <div className="modal-buttons">
-                  <button type="submit" disabled={loading}>
-                    {loading ? "Submitting..." : "Submit"}
-                  </button>
-
-                  <button
-                    type="button"
-                    className="close-btn"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Factory Order Management</h2>
+            <h3>New Customer Order</h3>
+
+            <form onSubmit={handleSubmit}>
+              <h4>Customer Details</h4>
+              <input name="customerName" placeholder="Name" onChange={handleChange} required />
+              <input name="mobile" placeholder="Mobile Number" onChange={handleChange} required />
+              <input name="address" placeholder="Street Address" onChange={handleChange} />
+              <input name="pincode" placeholder="Pincode" onChange={handleChange} />
+              <input name="state" placeholder="State" onChange={handleChange} />
+              <input name="city" placeholder="City" onChange={handleChange} />
+              <input name="country" placeholder="Country" onChange={handleChange} />
+
+              <h4>Order Requirements</h4>
+              <input name="orderType" placeholder="Order Type" onChange={handleChange} />
+              <input name="acres" placeholder="Acres of Land" onChange={handleChange} />
+              <input name="units" placeholder="Number of Units" onChange={handleChange} />
+              <input name="soilType" placeholder="Soil Type" onChange={handleChange} />
+
+              <h4>Product Details</h4>
+              <input name="productType" placeholder="Product Type" onChange={handleChange} />
+              <input name="material" placeholder="Product Material" onChange={handleChange} />
+              <input name="dimension" placeholder="Product Dimension" onChange={handleChange} />
+              <input name="deliveryDate" type="date" onChange={handleChange} />
+              <input name="amount" placeholder="Amount" onChange={handleChange} />
+
+              <div className="modal-buttons">
+                <button type="submit">
+                  {loading ? "Submitting..." : "Submit Order"}
+                </button>
+                <button type="button" onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
